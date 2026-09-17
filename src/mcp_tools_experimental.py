@@ -468,6 +468,53 @@ def setup_mcp_tools_experimental(mcp: FastMCP, controller=None) -> None:
         except Exception as e:
             return {"status": "error", "message": f"Error getting digital data: {str(e)}"}
 
+    @mcp.tool("run_capture")
+    def run_capture(ctx: Context,
+                    duration_seconds: float = 2.0,
+                    digital_channels: Optional[List[int]] = None,
+                    digital_sample_rate: Optional[int] = None,
+                    analog_channels: Optional[List[int]] = None,
+                    analog_sample_rate: Optional[int] = None,
+                    digital_threshold_volts: Optional[float] = None,
+                    device_id: Optional[str] = None,
+                    output_dir: Optional[str] = None,
+                    capture_name: str = "capture") -> Dict[str, Any]:
+        """
+        Trigger a real, timed capture on the connected Saleae Logic device via the
+        modern Automation API. Saves a native .sal capture file plus raw CSV export,
+        and returns a preview of the captured data directly in the response.
+
+        Args:
+            duration_seconds: capture length in seconds (default 2.0)
+            digital_channels: digital channel indices to capture (default 0-7)
+            digital_sample_rate: digital sample rate in Hz (device-specific allowed
+                values; omit to let Logic 2 pick one)
+            analog_channels: analog channel indices to capture (optional)
+            analog_sample_rate: analog sample rate in Hz (optional)
+            digital_threshold_volts: logic threshold voltage, only for devices that
+                support a configurable threshold (optional)
+            device_id: specific device id; omit to use the first available device
+            output_dir: folder to save the .sal/.csv files into (default
+                ~/Downloads/logic_captures)
+            capture_name: base filename for the saved .sal file (default "capture")
+        """
+        try:
+            out_dir = output_dir or os.path.join(os.path.expanduser("~"), "Downloads", "logic_captures")
+            result = controller.run_capture(
+                output_dir=out_dir,
+                duration_seconds=duration_seconds,
+                digital_channels=digital_channels,
+                digital_sample_rate=digital_sample_rate,
+                analog_channels=analog_channels,
+                analog_sample_rate=analog_sample_rate,
+                digital_threshold_volts=digital_threshold_volts,
+                device_id=device_id,
+                capture_name=capture_name,
+            )
+            return {"status": "success", **result}
+        except Exception as e:
+            return {"status": "error", "message": f"Failed to run capture: {str(e)}"}
+
 
     # TODO: Temporarily disabled analyze functions - will be re-enabled after Saleae API integration is complete
     """

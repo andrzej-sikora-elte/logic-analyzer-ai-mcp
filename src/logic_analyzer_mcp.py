@@ -39,8 +39,15 @@ def main(enable_logic2: Optional[bool] = None):
         # Create MCP server
         mcp = FastMCP("Logic 2 Control")
 
-        # Initialize Logic 2 automation controller
-        controller = Logic2AutomationController(manager=None)  # Manager will be initialized in the controller
+        # Initialize Logic 2 automation controller with a real Automation API connection
+        try:
+            from saleae.automation import Manager as _SaleaeManager
+            automation_manager = _SaleaeManager.connect()
+            logger.info("Connected to Saleae Logic 2 Automation API.")
+        except Exception as manager_err:
+            automation_manager = None
+            logger.warning(f"Could not connect to Saleae Logic 2 Automation API: {manager_err}")
+        controller = Logic2AutomationController(manager=automation_manager)
 
         # Setup MCP tools (pass enable_logic2)
         setup_mcp_tools(mcp, controller, enable_logic2=enable_logic2)
